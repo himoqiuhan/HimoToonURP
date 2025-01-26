@@ -10,21 +10,25 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
         _LitPunctualStencilReadMask ("LitPunctualStencilReadMask", Int) = 0
         _LitPunctualStencilWriteMask ("LitPunctualStencilWriteMask", Int) = 0
 
-        _SimpleLitPunctualStencilRef ("SimpleLitPunctualStencilWriteMask", Int) = 0
-        _SimpleLitPunctualStencilReadMask ("SimpleLitPunctualStencilReadMask", Int) = 0
-        _SimpleLitPunctualStencilWriteMask ("SimpleLitPunctualStencilWriteMask", Int) = 0
+        _CharacterLitPunctualStencilRef ("CharacterLitPunctualStencilWriteMask", Int) = 0
+        _CharacterLitPunctualStencilReadMask ("CharacterLitPunctualStencilReadMask", Int) = 0
+        _CharacterLitPunctualStencilWriteMask ("CharacterLitPunctualStencilWriteMask", Int) = 0
 
         _LitDirStencilRef ("LitDirStencilRef", Int) = 0
         _LitDirStencilReadMask ("LitDirStencilReadMask", Int) = 0
         _LitDirStencilWriteMask ("LitDirStencilWriteMask", Int) = 0
 
-        _SimpleLitDirStencilRef ("SimpleLitDirStencilRef", Int) = 0
-        _SimpleLitDirStencilReadMask ("SimpleLitDirStencilReadMask", Int) = 0
-        _SimpleLitDirStencilWriteMask ("SimpleLitDirStencilWriteMask", Int) = 0
+        _CharacterLitDirStencilRef ("CharacterLitDirStencilRef", Int) = 0
+        _CharacterLitDirStencilReadMask ("CharacterLitDirStencilReadMask", Int) = 0
+        _CharacterLitDirStencilWriteMask ("CharacterLitDirStencilWriteMask", Int) = 0
 
         _ClearStencilRef ("ClearStencilRef", Int) = 0
         _ClearStencilReadMask ("ClearStencilReadMask", Int) = 0
         _ClearStencilWriteMask ("ClearStencilWriteMask", Int) = 0
+        
+        _CharacterStencilRef ("CharacterStencilRef", Int) = 0
+        _CharacterStencilReadMask ("CharacterStencilReadMask", Int) = 0
+        _CharacterStencilWriteMask ("CharacterStencilWriteMask", Int) = 0
     }
 
     SubShader
@@ -136,6 +140,7 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             #pragma multi_compile_fragment _ _LIGHT_LAYERS
             #pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
             #pragma multi_compile_fragment _ _LIGHT_COOKIES
+            #pragma multi_compile_fragment _ _ENABLE_HALFTONE_LIGHTING
 
             // -------------------------------------
             // Includes
@@ -144,10 +149,10 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             ENDHLSL
         }
 
-        // 2 - Deferred Punctual Light (SimpleLit)
+        // 2 - Character Deferred Punctual Light
         Pass
         {
-            Name "Deferred Punctual Light (SimpleLit)"
+            Name "Character Deferred Punctual Light"
 
             // -------------------------------------
             // Render State Commands
@@ -161,9 +166,9 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             // -------------------------------------
             // Stencil Settings
             Stencil {
-                Ref [_SimpleLitPunctualStencilRef]
-                ReadMask [_SimpleLitPunctualStencilReadMask]
-                WriteMask [_SimpleLitPunctualStencilWriteMask]
+                Ref [_CharacterLitPunctualStencilRef]
+                ReadMask [_CharacterLitPunctualStencilReadMask]
+                WriteMask [_CharacterLitPunctualStencilWriteMask]
                 CompBack Equal
                 PassBack Zero
                 FailBack Keep
@@ -180,11 +185,10 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             // -------------------------------------
             // Shader Stages
             #pragma vertex Vertex
-            #pragma fragment DeferredShading
+            #pragma fragment CharacterDeferredShading
 
             // -------------------------------------
             // Defines
-            #define _SIMPLELIT
 
             // -------------------------------------
             // Universal Pipeline keywords
@@ -264,6 +268,7 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             #pragma multi_compile_fragment _ _LIGHT_LAYERS
             #pragma multi_compile_fragment _ _RENDER_PASS_ENABLED
             #pragma multi_compile_fragment _ _LIGHT_COOKIES
+            #pragma multi_compile_fragment _ _ENABLE_HALFTONE_LIGHTING
 
             // -------------------------------------
             // Includes
@@ -272,10 +277,10 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             ENDHLSL
         }
 
-        // 4 - Deferred Directional Light (SimpleLit)
+        // 4 - Character Deferred Directional Light
         Pass
         {
-            Name "Deferred Directional Light (SimpleLit)"
+            Name "Character Deferred Directional Light"
 
             // -------------------------------------
             // Render State Commands
@@ -288,9 +293,9 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             // -------------------------------------
             // Stencil Settings
             Stencil {
-                Ref [_SimpleLitDirStencilRef]
-                ReadMask [_SimpleLitDirStencilReadMask]
-                WriteMask [_SimpleLitDirStencilWriteMask]
+                Ref [_CharacterLitDirStencilRef]
+                ReadMask [_CharacterLitDirStencilReadMask]
+                WriteMask [_CharacterLitDirStencilWriteMask]
                 Comp Equal
                 Pass Keep
                 Fail Keep
@@ -307,11 +312,10 @@ Shader "Hidden/Universal Render Pipeline/StencilDeferred"
             // -------------------------------------
             // Shader Stages
             #pragma vertex Vertex
-            #pragma fragment DeferredShading
+            #pragma fragment CharacterDeferredShading
 
             // -------------------------------------
             // Universal Pipeline keywords
-            #define _SIMPLELIT
             #define _DIRECTIONAL
 
             // -------------------------------------

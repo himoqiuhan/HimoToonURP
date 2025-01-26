@@ -677,7 +677,7 @@ namespace UnityEngine.Rendering.Universal
         /// <summary>
         /// Motion data that persists over a frame.
         /// </summary>
-        internal MotionVectorsPersistentData motionVectorsPersistentData => m_MotionVectorsPersistentData;
+        public MotionVectorsPersistentData motionVectorsPersistentData => m_MotionVectorsPersistentData;
 
         /// <summary>
         /// Reset post-process history.

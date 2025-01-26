@@ -62,6 +62,12 @@
 // Light flags.
 #define kLightFlagSubtractiveMixedLighting    4 // The light uses subtractive mixed lighting.
 
+// Light usage
+#define kLightUsageColoring 1
+#define kLightUsageSpecular 2
+#define kLightUsageRimLight 4
+#define kLightUsageCelLight 8
+
 struct FragmentOutput
 {
     half4 GBuffer0 : SV_Target0;
@@ -203,11 +209,24 @@ FragmentOutput BRDFDataToGbuffer(BRDFData brdfData, InputData inputData, half sm
     materialFlags |= kMaterialFlagSubtractiveMixedLighting;
     #endif
 
+    //GBuffer1.g存GI计算时使用的Fresnel Term
+    half NoV = saturate(dot(inputData.normalWS, inputData.viewDirectionWS));
+    half fresnelTerm = Pow4(1.0 - NoV);
+    packedSpecular.g = fresnelTerm;
+
+    // //GBuffer1.b存平面反射GI Mask（暂时，后续需要生成全屏反射图，可不再使用此参数）
+    // #if defined(_SAMPLE_REFLECTION_TEXTURE)
+    // packedSpecular.b = 1;
+    // #else
+    // packedSpecular.b = 0;
+    // #endif
+
     FragmentOutput output;
     output.GBuffer0 = half4(brdfData.albedo.rgb, PackMaterialFlags(materialFlags));  // diffuse           diffuse         diffuse         materialFlags   (sRGB rendertarget)
-    output.GBuffer1 = half4(packedSpecular, occlusion);                              // metallic/specular specular        specular        occlusion
+    output.GBuffer1 = half4(packedSpecular, occlusion);                              // metallic/specular FresnelTerm        NULL        occlusion
     output.GBuffer2 = half4(packedNormalWS, smoothness);                             // encoded-normal    encoded-normal  encoded-normal  smoothness
-    output.GBuffer3 = half4(globalIllumination, 1);                                  // GI                GI              GI              unused          (lighting buffer)
+    output.GBuffer3 = half4(globalIllumination, 1);                                 // GI                GI              GI              unuse          (lighting buffer)
+    
     #if _RENDER_PASS_ENABLED
     output.GBuffer4 = inputData.positionCS.z;
     #endif

@@ -28,6 +28,13 @@ namespace UnityEditor.Rendering.Universal
         public SerializedProperty renderingLayers { get; }
         public SerializedProperty customShadowLayers { get; }
         public SerializedProperty shadowRenderingLayers { get; }
+        
+        // Additional Light Data properties
+        public SerializedProperty priorityProp { get; }
+        public SerializedProperty lightUsageProp { get; }
+        public SerializedProperty rimLightWidthProp { get; }
+        public SerializedProperty lightOffsetProp { get; }
+        
 
         /// <summary>Method that updates the <see cref="SerializedObject"/> of the Light and the Additional Light Data</summary>
         public void Update()
@@ -70,6 +77,11 @@ namespace UnityEditor.Rendering.Universal
             renderingLayers = serializedAdditionalDataObject.FindProperty("m_RenderingLayers");
             customShadowLayers = serializedAdditionalDataObject.FindProperty("m_CustomShadowLayers");
             shadowRenderingLayers = serializedAdditionalDataObject.FindProperty("m_ShadowRenderingLayers");
+            
+            priorityProp = serializedAdditionalDataObject.FindProperty("m_Priority");
+            lightUsageProp = serializedAdditionalDataObject.FindProperty("m_LightUsage");
+            rimLightWidthProp = serializedAdditionalDataObject.FindProperty("m_RimLightWidth");
+            lightOffsetProp = serializedAdditionalDataObject.FindProperty("m_LightOffset");
 
             settings.ApplyModifiedProperties();
         }

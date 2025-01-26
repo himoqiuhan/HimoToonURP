@@ -114,6 +114,7 @@ namespace UnityEditor.Rendering.Universal
 
         static void DrawGeneralContent(UniversalRenderPipelineSerializedLight serializedLight, Editor owner)
         {
+            EditorGUILayout.PropertyField(serializedLight.priorityProp, new GUIContent("光源优先级"));
             DrawGeneralContentInternal(serializedLight, owner, isInPreset: false);
         }
 
@@ -239,6 +240,7 @@ namespace UnityEditor.Rendering.Universal
             }
 
             DrawLightCookieContent(serializedLight, owner);
+            DrawAdditionalLightDatasContent(serializedLight, owner);
         }
 
         static void DrawRenderingContent(UniversalRenderPipelineSerializedLight serializedLight, Editor owner)
@@ -484,6 +486,34 @@ namespace UnityEditor.Rendering.Universal
                     if (EditorGUI.EndChangeCheck())
                         Experimental.Lightmapping.SetLightDirty((UnityEngine.Light)serializedLight.serializedObject.targetObject);
                 }
+            }
+        }
+        
+        [Flags]
+        private enum LightUsage
+        {
+            Coloring = 1 << 0,
+            Specular = 1 << 1,
+            RimLighting = 1 << 2,
+            CelLighting = 1 << 3,
+        }
+        
+        static void DrawAdditionalLightDatasContent(UniversalRenderPipelineSerializedLight serializedLight, Editor owner)
+        {
+            var settings = serializedLight.settings;
+            
+            LightUsage lightUsage = (LightUsage)serializedLight.lightUsageProp.intValue;
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(serializedLight.lightOffsetProp, new GUIContent("光照范围偏移"));
+            lightUsage = (LightUsage)EditorGUILayout.EnumFlagsField(Styles.LightUsage, lightUsage);
+            if (lightUsage.HasFlag(LightUsage.RimLighting))
+            {
+                EditorGUILayout.PropertyField(serializedLight.rimLightWidthProp, new GUIContent("边缘宽度"));
+            }
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedLight.lightUsageProp.intValue = (int)lightUsage;
+                serializedLight.Apply();
             }
         }
     }

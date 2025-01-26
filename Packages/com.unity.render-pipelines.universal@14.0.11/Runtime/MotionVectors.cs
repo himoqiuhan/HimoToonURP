@@ -3,7 +3,7 @@ using UnityEngine;
 namespace UnityEngine.Rendering.Universal
 {
     // Motion vector data that persists over frames. (per camera)
-    internal sealed class MotionVectorsPersistentData
+    public sealed class MotionVectorsPersistentData
     {
         #region Fields
 
@@ -42,12 +42,12 @@ namespace UnityEngine.Rendering.Universal
             get => m_PreviousViewProjection[0];
         }
 
-        internal Matrix4x4[] viewProjectionStereo
+        public Matrix4x4[] viewProjectionStereo
         {
             get => m_ViewProjection;
         }
 
-        internal Matrix4x4[] previousViewProjectionStereo
+        public Matrix4x4[] previousViewProjectionStereo
         {
             get => m_PreviousViewProjection;
         }
@@ -64,7 +64,7 @@ namespace UnityEngine.Rendering.Universal
             }
         }
 
-        internal int GetXRMultiPassId(ref CameraData cameraData)
+        public int GetXRMultiPassId(ref CameraData cameraData)
         {
 #if ENABLE_VR && ENABLE_XR_MODULE
             return cameraData.xr.enabled ? cameraData.xr.multipassId : 0;

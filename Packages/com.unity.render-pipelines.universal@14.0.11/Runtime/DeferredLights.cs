@@ -41,24 +41,24 @@ namespace UnityEngine.Rendering.Universal.Internal
             public static readonly int _LitStencilRef = Shader.PropertyToID("_LitStencilRef");
             public static readonly int _LitStencilReadMask = Shader.PropertyToID("_LitStencilReadMask");
             public static readonly int _LitStencilWriteMask = Shader.PropertyToID("_LitStencilWriteMask");
-            public static readonly int _SimpleLitStencilRef = Shader.PropertyToID("_SimpleLitStencilRef");
-            public static readonly int _SimpleLitStencilReadMask = Shader.PropertyToID("_SimpleLitStencilReadMask");
-            public static readonly int _SimpleLitStencilWriteMask = Shader.PropertyToID("_SimpleLitStencilWriteMask");
+            // public static readonly int _SimpleLitStencilRef = Shader.PropertyToID("_SimpleLitStencilRef");
+            // public static readonly int _SimpleLitStencilReadMask = Shader.PropertyToID("_SimpleLitStencilReadMask");
+            // public static readonly int _SimpleLitStencilWriteMask = Shader.PropertyToID("_SimpleLitStencilWriteMask");
             public static readonly int _StencilRef = Shader.PropertyToID("_StencilRef");
             public static readonly int _StencilReadMask = Shader.PropertyToID("_StencilReadMask");
             public static readonly int _StencilWriteMask = Shader.PropertyToID("_StencilWriteMask");
             public static readonly int _LitPunctualStencilRef = Shader.PropertyToID("_LitPunctualStencilRef");
             public static readonly int _LitPunctualStencilReadMask = Shader.PropertyToID("_LitPunctualStencilReadMask");
             public static readonly int _LitPunctualStencilWriteMask = Shader.PropertyToID("_LitPunctualStencilWriteMask");
-            public static readonly int _SimpleLitPunctualStencilRef = Shader.PropertyToID("_SimpleLitPunctualStencilRef");
-            public static readonly int _SimpleLitPunctualStencilReadMask = Shader.PropertyToID("_SimpleLitPunctualStencilReadMask");
-            public static readonly int _SimpleLitPunctualStencilWriteMask = Shader.PropertyToID("_SimpleLitPunctualStencilWriteMask");
+            public static readonly int _CharacterLitPunctualStencilRef = Shader.PropertyToID("_CharacterLitPunctualStencilRef");
+            public static readonly int _CharacterLitPunctualStencilReadMask = Shader.PropertyToID("_CharacterLitPunctualStencilReadMask");
+            public static readonly int _CharacterLitPunctualStencilWriteMask = Shader.PropertyToID("_CharacterLitPunctualStencilWriteMask");
             public static readonly int _LitDirStencilRef = Shader.PropertyToID("_LitDirStencilRef");
             public static readonly int _LitDirStencilReadMask = Shader.PropertyToID("_LitDirStencilReadMask");
             public static readonly int _LitDirStencilWriteMask = Shader.PropertyToID("_LitDirStencilWriteMask");
-            public static readonly int _SimpleLitDirStencilRef = Shader.PropertyToID("_SimpleLitDirStencilRef");
-            public static readonly int _SimpleLitDirStencilReadMask = Shader.PropertyToID("_SimpleLitDirStencilReadMask");
-            public static readonly int _SimpleLitDirStencilWriteMask = Shader.PropertyToID("_SimpleLitDirStencilWriteMask");
+            public static readonly int _CharacterLitDirStencilRef = Shader.PropertyToID("_CharacterLitDirStencilRef");
+            public static readonly int _CharacterLitDirStencilReadMask = Shader.PropertyToID("_CharacterLitDirStencilReadMask");
+            public static readonly int _CharacterLitDirStencilWriteMask = Shader.PropertyToID("_CharacterLitDirStencilWriteMask");
             public static readonly int _ClearStencilRef = Shader.PropertyToID("_ClearStencilRef");
             public static readonly int _ClearStencilReadMask = Shader.PropertyToID("_ClearStencilReadMask");
             public static readonly int _ClearStencilWriteMask = Shader.PropertyToID("_ClearStencilWriteMask");
@@ -80,6 +80,8 @@ namespace UnityEngine.Rendering.Universal.Internal
             public static int _ShadowLightIndex = Shader.PropertyToID("_ShadowLightIndex");
             public static int _LightLayerMask = Shader.PropertyToID("_LightLayerMask");
             public static int _CookieLightIndex = Shader.PropertyToID("_CookieLightIndex");
+            
+            public static int _LightAdditionalData = Shader.PropertyToID("_LightAdditionalData");
         }
 
         internal static readonly string[] k_GBufferNames = new string[]
@@ -97,30 +99,31 @@ namespace UnityEngine.Rendering.Universal.Internal
         {
             "Stencil Volume",
             "Deferred Punctual Light (Lit)",
-            "Deferred Punctual Light (SimpleLit)",
+            "Character Deferred Punctual Light",
             "Deferred Directional Light (Lit)",
-            "Deferred Directional Light (SimpleLit)",
+            "Character Deferred Directional Light",
             "ClearStencilPartial",
             "Fog",
-            "SSAOOnly"
+            "SSAOOnly",
         };
 
         internal enum StencilDeferredPasses
         {
             StencilVolume,
             PunctualLit,
-            PunctualSimpleLit,
+            PunctualCharacterLit,
             DirectionalLit,
-            DirectionalSimpleLit,
+            DirectionalCharacterLit,
             ClearStencilPartial,
             Fog,
-            SSAOOnly
+            SSAOOnly,
         };
 
         static readonly ushort k_InvalidLightOffset = 0xFFFF;
         static readonly string k_SetupLights = "SetupLights";
         static readonly string k_DeferredPass = "Deferred Pass";
         static readonly string k_DeferredStencilPass = "Deferred Shading (Stencil)";
+        static readonly string k_DeferredCharacterPass = "Deferred Character Shading"; // Character deferred shading
         static readonly string k_DeferredFogPass = "Deferred Fog";
         static readonly string k_ClearStencilPartial = "Clear Stencil Partial";
         static readonly string k_SetupLightConstants = "Setup Light Constants";
@@ -222,6 +225,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
         // Hold all shaders for stencil-volume deferred shading.
         Material m_StencilDeferredMaterial;
+        
+        Material m_CharacterDeferredMaterial;
 
         // Pass indices.
         int[] m_StencilDeferredPasses;
@@ -230,6 +235,7 @@ namespace UnityEngine.Rendering.Universal.Internal
         Matrix4x4[] m_ScreenToWorld = new Matrix4x4[2];
 
         ProfilingSampler m_ProfilingSamplerDeferredStencilPass = new ProfilingSampler(k_DeferredStencilPass);
+        ProfilingSampler m_ProfilingSamplerDeferredCharacterPass = new ProfilingSampler(k_DeferredCharacterPass);
         ProfilingSampler m_ProfilingSamplerDeferredFogPass = new ProfilingSampler(k_DeferredFogPass);
         ProfilingSampler m_ProfilingSamplerClearStencilPartialPass = new ProfilingSampler(k_ClearStencilPartial);
 
@@ -238,7 +244,8 @@ namespace UnityEngine.Rendering.Universal.Internal
         internal struct InitParams
         {
             public Material stencilDeferredMaterial;
-
+            public Material characterDeferredMaterial;
+            
             public LightCookieManager lightCookieManager;
         }
 
@@ -254,6 +261,7 @@ namespace UnityEngine.Rendering.Universal.Internal
             DeferredConfig.IsDX10 = SystemInfo.graphicsDeviceType == GraphicsDeviceType.Direct3D11 && SystemInfo.graphicsShaderLevel <= 40;
 
             m_StencilDeferredMaterial = initParams.stencilDeferredMaterial;
+            m_CharacterDeferredMaterial = initParams.characterDeferredMaterial;
 
             m_StencilDeferredPasses = new int[k_StencilDeferredPassNames.Length];
             InitStencilDeferredMaterial();
@@ -586,6 +594,8 @@ namespace UnityEngine.Rendering.Universal.Internal
                 // Firt directional light will apply SSAO if possible, unless there is none.
                 if (!HasStencilLightsOfType(LightType.Directional))
                     RenderSSAOBeforeShading(cmd, ref renderingData);
+                
+                // RenderCharacterRimLight(cmd, ref renderingData);
 
                 RenderStencilLights(context, cmd, ref renderingData);
 
@@ -620,9 +630,12 @@ namespace UnityEngine.Rendering.Universal.Internal
 
             var additionalLightData = lightData.visibleLights[lightData.mainLightIndex].light.GetUniversalAdditionalLightData();
             uint lightLayerMask = RenderingLayerUtils.ToValidRenderingLayers(additionalLightData.renderingLayers);
+            
+            Vector4 lightAdditionalData = InitializeLightAdditionalData(additionalLightData);
 
             cmd.SetGlobalVector(ShaderConstants._MainLightPosition, lightPos);
             cmd.SetGlobalVector(ShaderConstants._MainLightColor, lightColor);
+            cmd.SetGlobalVector(ShaderConstants._LightAdditionalData, lightAdditionalData);
             cmd.SetGlobalInt(ShaderConstants._MainLightLayerMask, (int)lightLayerMask);
         }
 
@@ -728,6 +741,33 @@ namespace UnityEngine.Rendering.Universal.Internal
         {
             return m_stencilVisLightOffsets[(int)type] != k_InvalidLightOffset;
         }
+        
+        void RenderCharacterRimLight(CommandBuffer cmd, ref RenderingData renderingData)
+        {
+            if (m_FullscreenMesh == null)
+                m_FullscreenMesh = CreateFullscreenMesh();
+            
+            if (m_CharacterDeferredMaterial == null)
+            {
+                Debug.LogErrorFormat("Missing {0}. {1} render pass will not execute. Check for missing reference in the renderer resources.", m_CharacterDeferredMaterial, GetType().Name);
+                return;
+            }
+            
+            //Character Deferred Lighting
+            // cmd.SetGlobalFloat(ShaderConstants._CharacterStencilRef, (float)StencilUsage.MaterialToonCharacter);
+            // cmd.SetGlobalFloat(ShaderConstants._CharacterStencilReadMask, (float)StencilUsage.UserMask);
+            // cmd.SetGlobalFloat(ShaderConstants._CharacterStencilWriteMask, (float)StencilUsage.UserMask);
+            
+            Profiler.BeginSample(k_DeferredStencilPass);
+
+            using (new ProfilingScope(cmd, m_ProfilingSamplerDeferredCharacterPass))
+            {
+                // Character Lighting
+                cmd.DrawMesh(m_FullscreenMesh, Matrix4x4.identity, m_CharacterDeferredMaterial, 0, 0);
+            }
+
+            Profiler.EndSample();
+        }
 
         void RenderStencilLights(ScriptableRenderContext context, CommandBuffer cmd, ref RenderingData renderingData)
         {
@@ -770,6 +810,18 @@ namespace UnityEngine.Rendering.Universal.Internal
             CoreUtils.SetKeyword(cmd, ShaderKeywordStrings.AdditionalLightShadows, shouldEnable);
         }
 
+        Vector4 InitializeLightAdditionalData(UniversalAdditionalLightData data)
+        {
+            Vector4 lightAdditionalData = new Vector4(3.0f, 0.0f, 0.0f, 0.0f);
+            lightAdditionalData.x = data.lightUsage;
+            if ((data.lightUsage & 1 << 2) != 0)
+            {
+                lightAdditionalData.y = data.rimLightWidth;
+            }
+            lightAdditionalData.z = data.lightOffset;
+            return lightAdditionalData;
+        }
+
         void RenderStencilDirectionalLights(CommandBuffer cmd, ref RenderingData renderingData, NativeArray<VisibleLight> visibleLights, int mainLightIndex)
         {
             if (m_FullscreenMesh == null)
@@ -801,6 +853,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 var additionalLightData = light.GetUniversalAdditionalLightData();
                 uint lightLayerMask = RenderingLayerUtils.ToValidRenderingLayers(additionalLightData.renderingLayers);
+                
+                Vector4 lightAdditionalData = InitializeLightAdditionalData(additionalLightData);
 
                 // Setup shadow parameters:
                 // - for the main light, they have already been setup globally, so nothing to do.
@@ -826,13 +880,14 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 cmd.SetGlobalVector(ShaderConstants._LightColor, lightColor); // VisibleLight.finalColor already returns color in active color space
                 cmd.SetGlobalVector(ShaderConstants._LightDirection, lightDir);
+                cmd.SetGlobalVector(ShaderConstants._LightAdditionalData, lightAdditionalData);
                 cmd.SetGlobalInt(ShaderConstants._LightFlags, lightFlags);
                 cmd.SetGlobalInt(ShaderConstants._LightLayerMask, (int)lightLayerMask);
-
+                
                 // Lighting pass.
                 cmd.DrawMesh(m_FullscreenMesh, Matrix4x4.identity, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.DirectionalLit]);
-                cmd.DrawMesh(m_FullscreenMesh, Matrix4x4.identity, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.DirectionalSimpleLit]);
-
+                cmd.DrawMesh(m_FullscreenMesh, Matrix4x4.identity, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.DirectionalCharacterLit]);
+                
                 isFirstLight = false;
             }
 
@@ -869,6 +924,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 var additionalLightData = light.GetUniversalAdditionalLightData();
                 uint lightLayerMask = RenderingLayerUtils.ToValidRenderingLayers(additionalLightData.renderingLayers);
+                
+                Vector4 lightAdditionalData = InitializeLightAdditionalData(additionalLightData);
 
                 int lightFlags = 0;
                 if (light.bakingOutput.lightmapBakeType == LightmapBakeType.Mixed)
@@ -893,6 +950,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 cmd.SetGlobalVector(ShaderConstants._LightColor, lightColor);
                 cmd.SetGlobalVector(ShaderConstants._LightAttenuation, lightAttenuation);
                 cmd.SetGlobalVector(ShaderConstants._LightOcclusionProbInfo, lightOcclusionChannel);
+                cmd.SetGlobalVector(ShaderConstants._LightAdditionalData, lightAdditionalData);
                 cmd.SetGlobalInt(ShaderConstants._LightFlags, lightFlags);
                 cmd.SetGlobalInt(ShaderConstants._ShadowLightIndex, shadowLightIndex);
                 cmd.SetGlobalInt(ShaderConstants._LightLayerMask, (int)lightLayerMask);
@@ -902,7 +960,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 // Lighting pass.
                 cmd.DrawMesh(m_SphereMesh, transformMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualLit]);
-                cmd.DrawMesh(m_SphereMesh, transformMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualSimpleLit]);
+                cmd.DrawMesh(m_SphereMesh, transformMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualCharacterLit]);
             }
 
             cmd.DisableShaderKeyword(ShaderKeywordStrings._POINT);
@@ -936,6 +994,8 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 var additionalLightData = light.GetUniversalAdditionalLightData();
                 uint lightLayerMask = RenderingLayerUtils.ToValidRenderingLayers(additionalLightData.renderingLayers);
+                
+                Vector4 lightAdditionalData = InitializeLightAdditionalData(additionalLightData);
 
                 int lightFlags = 0;
                 if (light.bakingOutput.lightmapBakeType == LightmapBakeType.Mixed)
@@ -963,6 +1023,7 @@ namespace UnityEngine.Rendering.Universal.Internal
                 cmd.SetGlobalVector(ShaderConstants._LightAttenuation, lightAttenuation);
                 cmd.SetGlobalVector(ShaderConstants._LightDirection, new Vector3(lightSpotDir.x, lightSpotDir.y, lightSpotDir.z));
                 cmd.SetGlobalVector(ShaderConstants._LightOcclusionProbInfo, lightOcclusionChannel);
+                cmd.SetGlobalVector(ShaderConstants._LightAdditionalData, lightAdditionalData);
                 cmd.SetGlobalInt(ShaderConstants._LightFlags, lightFlags);
                 cmd.SetGlobalInt(ShaderConstants._ShadowLightIndex, shadowLightIndex);
                 cmd.SetGlobalInt(ShaderConstants._LightLayerMask, (int)lightLayerMask);
@@ -972,7 +1033,7 @@ namespace UnityEngine.Rendering.Universal.Internal
 
                 // Lighting pass.
                 cmd.DrawMesh(m_HemisphereMesh, vl.localToWorldMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualLit]);
-                cmd.DrawMesh(m_HemisphereMesh, vl.localToWorldMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualSimpleLit]);
+                cmd.DrawMesh(m_HemisphereMesh, vl.localToWorldMatrix, m_StencilDeferredMaterial, 0, m_StencilDeferredPasses[(int)StencilDeferredPasses.PunctualCharacterLit]);
             }
 
             cmd.DisableShaderKeyword(ShaderKeywordStrings._SPOT);
@@ -1017,15 +1078,15 @@ namespace UnityEngine.Rendering.Universal.Internal
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitPunctualStencilRef, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialLit));
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitPunctualStencilReadMask, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialMask));
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitPunctualStencilWriteMask, (float)StencilUsage.StencilLight);
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitPunctualStencilRef, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialSimpleLit));
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitPunctualStencilReadMask, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialMask));
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitPunctualStencilWriteMask, (float)StencilUsage.StencilLight);
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitPunctualStencilRef, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialCharacterLit));
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitPunctualStencilReadMask, (float)((int)StencilUsage.StencilLight | (int)StencilUsage.MaterialMask | (int)StencilUsage.MaterialCharacterMask));
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitPunctualStencilWriteMask, (float)StencilUsage.StencilLight);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitDirStencilRef, (float)StencilUsage.MaterialLit);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitDirStencilReadMask, (float)StencilUsage.MaterialMask);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._LitDirStencilWriteMask, 0.0f);
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitDirStencilRef, (float)StencilUsage.MaterialSimpleLit);
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitDirStencilReadMask, (float)StencilUsage.MaterialMask);
-            m_StencilDeferredMaterial.SetFloat(ShaderConstants._SimpleLitDirStencilWriteMask, 0.0f);
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitDirStencilRef, (float)StencilUsage.MaterialCharacterLit);
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitDirStencilReadMask, (float)StencilUsage.MaterialMask);
+            m_StencilDeferredMaterial.SetFloat(ShaderConstants._CharacterLitDirStencilWriteMask, 0.0f);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._ClearStencilRef, 0.0f);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._ClearStencilReadMask, (float)StencilUsage.MaterialMask);
             m_StencilDeferredMaterial.SetFloat(ShaderConstants._ClearStencilWriteMask, (float)StencilUsage.MaterialMask);

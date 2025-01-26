@@ -296,5 +296,38 @@ namespace UnityEngine.Rendering.Universal
             if (light)
                 light.renderingLayerMask = m_CustomShadowLayers ? (int)m_ShadowRenderingLayers : (int)m_RenderingLayers;
         }
+        
+        [Tooltip("光源优先级")]
+        [SerializeField] int m_Priority = 0;
+        public int priority
+        {
+            get => m_Priority;
+            set => m_Priority = value;
+        }
+        
+        [Tooltip("光源用途")]
+        [SerializeField] int m_LightUsage = 3;
+        public int lightUsage
+        {
+            get => m_LightUsage;
+            set => m_LightUsage = value;
+        }
+        
+        // TODO: 考虑是否影响边缘光的宽度
+        [Tooltip("光照范围偏移")] [Range(-0.5f, 0.5f)]
+        [SerializeField] float m_LightOffset = 0.0f;
+        public float lightOffset
+        {
+            get => m_LightOffset;
+            set => m_LightOffset = value;
+        }
+        
+        [Tooltip("影响边缘光宽度")] [Range(0.0f, 0.1f)]
+        [SerializeField] float m_RimLightWidth = 0.0f;
+        public float rimLightWidth
+        {
+            get => m_RimLightWidth;
+            set => m_RimLightWidth = value;
+        }
     }
 }
