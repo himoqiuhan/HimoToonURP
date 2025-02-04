@@ -1,0 +1,83 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel RampGenLinear
+#pragma kernel RampGenSRGB
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+StructuredBuffer<float4> colors;
+float rampResolutionX;
+int colorKeysCount;
+
+// 如果Gradient直接在管线中生成，则使用Linear的颜色值
+[numthreads(8,8,1)]
+void RampGenLinear (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(id.xy);
+    float gradientFactor = uv.x / rampResolutionX;
+    float4 lcolor = float4(0, 0, 0, 0);
+    float4 rcolor = float4(0, 0, 0, 0);
+    for(int i = 0;i < colorKeysCount - 1;++i)
+    {
+        if(gradientFactor > colors[i].w && gradientFactor <= colors[i + 1].w)
+        {
+            lcolor = colors[i];
+            rcolor = colors[i + 1];
+            break;
+        }
+    }
+    float4 resultColor = lerp(lcolor, rcolor, (gradientFactor - lcolor.w)/(rcolor.w - lcolor.w));
+    if (gradientFactor <= colors[0].w)
+    {
+        resultColor = colors[0];
+    }
+    if (gradientFactor >= colors[colorKeysCount - 1].w)
+    {
+        resultColor = colors[colorKeysCount - 1];
+    }
+    resultColor.w = 1;
+    Result[id.xy] = resultColor;
+}
+
+float4 LinearToSRGB(float4 linearColor)
+{
+    float r = linearColor.r;
+    float g = linearColor.g;
+    float b = linearColor.b;
+
+    r = (r <= 0.0031308) ? (12.92f * r) : (1.055f * pow(r, 1.0f / 2.4f) - 0.055f);
+    g = (g <= 0.0031308) ? (12.92f * g) : (1.055f * pow(g, 1.0f / 2.4f) - 0.055f);
+    b = (b <= 0.0031308) ? (12.92f * b) : (1.055f * pow(b, 1.0f / 2.4f) - 0.055f);
+
+    return float4(r, g, b, 1);
+}
+
+[numthreads(8,8,1)]
+void RampGenSRGB (uint3 id : SV_DispatchThreadID)
+{
+    float2 uv = float2(id.xy);
+    float gradientFactor = uv.x / rampResolutionX;
+    float4 lcolor = float4(0, 0, 0, 0);
+    float4 rcolor = float4(0, 0, 0, 0);
+    for(int i = 0;i < colorKeysCount - 1;++i)
+    {
+        if(gradientFactor > colors[i].w && gradientFactor <= colors[i + 1].w)
+        {
+            lcolor = colors[i];
+            rcolor = colors[i + 1];
+            break;
+        }
+    }
+    float4 resultColor = lerp(lcolor, rcolor, (gradientFactor - lcolor.w)/(rcolor.w - lcolor.w));
+    if (gradientFactor <= colors[0].w)
+    {
+        resultColor = colors[0];
+    }
+    if (gradientFactor >= colors[colorKeysCount - 1].w)
+    {
+        resultColor = colors[colorKeysCount - 1];
+    }
+    resultColor.w = 1;
+    
+    Result[id.xy] = LinearToSRGB(resultColor);
+}
